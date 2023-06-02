@@ -1,10 +1,10 @@
 from aiogram import types
-from aiogram.dispatcher import Dispatcher
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
-from utils import messages, utils
-from model.predictor import model
+
 from bot.states import States
+from model.predictor import model
+from utils import messages, utils
+
 
 async def welcome(msg: types.Message):
     await States.work.set()
@@ -12,7 +12,6 @@ async def welcome(msg: types.Message):
 
 
 async def image_handler(msg: types.Message, state: FSMContext):
-
     images = msg.photo
 
     if images is None:
@@ -24,17 +23,18 @@ async def image_handler(msg: types.Message, state: FSMContext):
 
     await image.download(path)
 
+    # так можно менять логику предсказаний, вызывать разые модели, в зависимости от ответа и тд
     async with state.proxy() as data:
         sign = data["sign"]
 
-    prediction = model(utils.prepare_image(path), sign)
+    prepared_image = utils.prepare_image(path)
+    prediction = model(prepared_image)
 
     await msg.reply(messages.prediction.format(prediction))
     await welcome(msg)
 
 
 async def question_answer(msg: types.Message, state: FSMContext):
-
     await States.question.set()
     sign = "Положительное" in msg.text
 
@@ -52,5 +52,3 @@ async def question_answer_tochno(msg: types.Message, state: FSMContext):
     else:
         await States.image.set()
         await msg.reply(messages.image)
-
-

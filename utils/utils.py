@@ -1,17 +1,15 @@
-import numpy as np
-import cv2
-import torch
-from torchvision.transforms import Resize
+import torchvision
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 
-
 def prepare_image(path):
+    # читаем изображение
+    image = torchvision.io.read_image(path).float()
+    # нормализуем
+    image /= 255.0
+    # добавляем размерность батча, получаем батч из одной картинки
+    return image.unsqueeze(0)
 
-    image = cv2.imread(path).transpose((2, 0, 1))
-    image = torch.from_numpy(image).float()
-
-    return image
 
 def form_reply_keyboard(buttons_info):
     keyboard = ReplyKeyboardMarkup()
@@ -19,5 +17,5 @@ def form_reply_keyboard(buttons_info):
     for i in range(len(buttons_info)):
         print(buttons_info[i])
         keyboard.add(KeyboardButton(str(buttons_info[i])))
-        
+
     return keyboard

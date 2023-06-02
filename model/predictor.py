@@ -1,38 +1,36 @@
 import torch
-from torch import nn
-from torchvision.transforms import Resize
+from torchvision import transforms
+from torchvision.models import resnet18
+
+
+def get_model() -> torch.nn.Module:
+    model = resnet18()
+    last_layer_features_in = model.fc.in_features
+    model.fc = torch.nn.Linear(last_layer_features_in, 10)
+    return model
 
 
 class MyModel:
+    def __init__(self):
+        self.model = get_model()
+        input_size = 224
+        self.transforms = transforms.Compose([
+            transforms.Resize(input_size),
+            transforms.CenterCrop(input_size),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
 
-    def __init__(self, path=None):
-        if path is None:
-            self.resizer = Resize((256, 256))
-            self.my_model = nn.Sequential(
-                nn.Conv2d(3, 1, kernel_size=3, padding=(1, 1)), 
-                nn.ReLU(),
-                nn.MaxPool2d(kernel_size=2),
-                nn.Flatten(),
-                )
-            
-            self.linear_head = nn.Sequential(
-                nn.Linear(16384, 1),
-                nn.Sigmoid()
-                )
+    def load_model(self):
+        self.model.load_state_dict(torch.load("finetuned_model.pth"), strict=False)
 
-    
-    def __call__(self, data: torch.FloatTensor, is_positive=True):
-
-        if len(data.shape) == 3:
-            data = data.view(1, *data.shape)
-
-        if data.max() > 2:
-            data /= 255
-
+    def __call__(self, data: torch.FloatTensor):
+        print(data.shape, data[0, 0])
         with torch.no_grad():
-            resized_data = self.resizer(data)
-            prediction = self.my_model(resized_data)
-            
-            return (2 * is_positive - 1) * self.linear_head(prediction)[0].item()
-    
+            resized_data = self.transforms(data)
+            prediction = self.model(resized_data)
+
+            return prediction
+
+
 model = MyModel()
+model.load_model()

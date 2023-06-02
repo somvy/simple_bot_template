@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 
-from aiogram import Bot, types
+from aiogram import Bot
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
-from handlers import welcome, image_handler, question_answer, question_answer_tochno
 from bot.states import States
+from handlers import welcome, image_handler, question_answer, question_answer_tochno
 
 bot = Bot(token="add_your_token_here")
 dp = Dispatcher(bot, storage=MemoryStorage())
